@@ -1,12 +1,9 @@
-import os
-import argspace
-import sys
 import numpy as np
-import copy
+import matplotlib.pyplot as plt
+import scipy.fftpack as fft
+from astropy.io import fits
 
-from os.path import join, splitext
-
-def main(filename, outdir, save_images, aperture=False, blackman=True):
+def main(filename, outdir, save_images, aperture=True, blackman=True):
     """
     #################
     Melisa Tallis - 2018-10-10
@@ -32,25 +29,21 @@ def main(filename, outdir, save_images, aperture=False, blackman=True):
     inD = 1.024  # inner M2 diameter (m)
     
     ## GPI DM parameters
-    N = 48          # number sample points across the screen 
+    N = 48.          # number sample points across the screen 
                     # (Not the number of subapertures across the aperture which is less) 
     nacross = 43.2    # number of subapertures across the aperture
     
     ## phase sample parameters
     pscale = outD/(nacross)     #  pixel size (m) of samples in pupil plane
-    T = 1.0 / pscale            #  sample spacing
-    
+
     if aperture:
-        ax, ay    = generate_grids(N, scalefac=pscale) # need to create seperate script
-        ar        = np.sqrt(ax**2 + ay**2) ## aperture radius
+        x         = np.linspace(-(N-1)/2,(N-1)/2,N)*pscale 
+        y         = np.linspace(-(N-1)/2,(N-1)/2,N)*pscale
+        ax,ay     = np.meshgrid(x,y)
+        ar        = np.sqrt(ax**2 +ay**2)  
         ap_outer  = (ar <= outD/2)
         ap_inner  = (ar <= inDs/2)   
-        ap        = (ap_outer ^ ap_inner).astype(int)
-        
-    if blackman:
-        wx, wy    = generate_grids(N, scalefac=pscale) # need to create seperate script
-        wr        = np.sqrt(wx**2 + wy**2) ## window radius
-        w         = np.blackman(wr)
+        a        = (ap_outer ^ ap_inner).astype(int)
         
     # open the file 
     hdulist = fits.open(rootdir+filename,memmap=True)
@@ -62,15 +55,31 @@ def main(filename, outdir, save_images, aperture=False, blackman=True):
     phy   = phdim[2]
     timesteps = phdim[0]
     
-    # Get the fourier transform of the phase at each timestep
     phFT = np.zeros((timesteps,phx,phy), dtype=complex)
     for t in np.arange(timesteps):
-        phFT[t,:,:] = fft.fft2(hdulist[0].data[t,:,:]) / (phx*phy)
-    print 'Done with FT'
+        phFT[t,:,:] = fft.fftshift(fft.fft2(data[t,:,:]*a))/(a.sum)
+    print('Done with FT')
     
     print 'Doing PSD'
-    mft = np.sum(phFT, axis=0)
-    kx, ky = gg.generate_grids(phx, scalefac=2*np.pi/(bign*pscale), freqshift=True)
+    psd2D = np.zeros((timesteps, phx, phy),dtype=float)
+    for k in np.arange(phx):
+        for l in np.arange(phy):
+            psd2D[:,k,l] = np.abs(phFT[:,k,l])**2
+    
+    varpsd = np.sum(psd, axis=0)
+    
+    # Create k-grid
+    kx = fft.fftshift(fft.fftfreq(phx,pscale))
+    ky = fft.fftshift(fft.fftfreq(phx,psacle))
+    mg = np.meshgrid(kx,ky)
+    kr = np.sqrt(np.sum((m**2 for m in mg))) 
+    
+    plt.figure(1)
+    plt.loglog(kr,varpsd)
+    plt.grid(True)
+    plt.show()
+    
+     
         
         
     
