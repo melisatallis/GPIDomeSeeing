@@ -1,4 +1,4 @@
-def MakeAperture(n,pscale):
+def makeAperture(n,pscale):
     x = np.linspace(-(n-1)/2,(n-1)/2,n)*pscale 
     y = np.linspace(-(n-1)/2,(n-1)/2,n)*pscale
     mg = np.meshgrid(x,y)
@@ -8,14 +8,14 @@ def MakeAperture(n,pscale):
     ap = (ap_outer ^ ap_inner).astype(int)
     return ap
 
-def MakeFreqGrid(n,pscale):
+def makeFreqGrid(n,pscale):
     kx = fft.fftshift(fft.fftfreq(n,pscale))
     ky = fft.fftshift(fft.fftfreq(n,psacle))
     mg = np.meshgrid(kx,ky)
     kr = np.sqrt(np.sum((m**2 for m in mg))) 
     return kr
 
-def RadialProfile(image, center=None):
+def radialProfile(image, center=None):
     """
     Calculate the avearge radial profile.
 
