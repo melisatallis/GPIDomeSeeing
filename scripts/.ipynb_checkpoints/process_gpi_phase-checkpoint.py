@@ -4,7 +4,7 @@ import pandas as pd
 import scipy.fftpack as fft
 from astropy.io import fits
 from scipy import optimize
-from poppy import zernike
+import poppy
 import gpi_phase_analysis as gpa
 import sys
 import os
@@ -70,8 +70,8 @@ for file in df.loc[:,'path']:
     avg_phase = np.nanmean(phase*ap_nan,axis=0)  # Identify long timescale aberrations 
     
     # remove zernikes from cube
-    z_basis = zernike.zernike_basis_faster(nterms= 6, npix = 48)
-    z_coeff = zernike.opd_expand_nonorthonormal(avg_phase, aperture=ap, nterms=6)
+    z_basis = poppy.zernike.zernike_basis_faster(nterms= 6, npix = 48)
+    z_coeff = poppy.zernike.opd_expand_nonorthonormal(avg_phase, aperture=ap, nterms=6)
     thin_lens = np.sum(z_coeff[:,None,None]*z_basis[:,:,:],axis=0)
 
     c_phase = (phase - thin_lens[None,:,:])*ap_nan
