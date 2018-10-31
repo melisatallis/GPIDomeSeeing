@@ -28,11 +28,9 @@ def radialProfile(image, center=None):
     
     n = np.bincount(r.ravel())
     sy = np.bincount(r.ravel(), image.ravel())
-    sy2 = np.bincount(r.ravel(), image.ravel()*image.ravel())
     mean = sy/n
-    std = np.sqrt(sy2/n - mean*mean)
     
-    return mean,std,n 
+    return mean
 
 '''def PowerLawFit(psd,freq,low_bound = 0., up_bound = 2.7):
     """Plot the 1D psd"""

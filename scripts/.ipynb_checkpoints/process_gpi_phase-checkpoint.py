@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.fftpack as fft
 from astropy.io import fits
+from scipy import optimize
 from poppy import zernike
 import gpi_phase_analysis as gpa
 import sys
@@ -33,6 +34,7 @@ ap_nan[np.where(ap==0)] = np.nan        # contains nans
 kr = gpa.makeFreqGrid(n,pscale)    
 
 #  Search directory tree for dm phase cubes
+#rootdir = "/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/Reduced/"
 rootdir = "/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/Reduced/"
 fname_list = list()
 name_list = list()
@@ -51,16 +53,17 @@ df['path'] = fname_list
 df['filename'] = name_list
 
 #  Results path
-save_path = '/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/'
-#results_path = '/Users/melisatallis/Documents/Research/GPIDomeSeeing/data/aotelem/sp_psd/'
+#save_path = '/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/'
+save_path = '/home/sda/mtallis/Results/'
 dstr = time.strftime('%Y%m%d')
 
 #  begin psd analysis
 n=0
-for file in df.loc[0:5,'path']:
+for file in df.loc[:,'path']:
     
     hdulist = fits.open(file,memmap=True)        # phase data shape (time,xpix,ypix)
     df.loc[n,'whenstr'] = hdulist[0].header['whenstr']  
+    whenstr = df.loc[n,'whenstr']
     
     phase = hdulist[0].data.astype('float')
     timesteps, phx, phy = phase.shape            # contains a datacube
@@ -94,54 +97,54 @@ for file in df.loc[0:5,'path']:
     avg_psd1D =  gpa.radialProfile(avg_psd2D)
     freq = gpa.radialProfile(kr)
     
-   # store plots and tables in date of observation directory (be more descriptive)
-    whenstr = df.loc[n,'whenstr']
-    date_dir = os.path.join(save_path,whenstr)
-    
-    sp_psd_dir = os.path.join(date_dir,'sp_psd')
-    os.mkdir(sp_psd_dir)
-    
-    table_dir = os.path.join(sp_psd_dir,'tables')
-    os.mkdir(table_dir)
-    
-    table = pd.DataFrame({'freq':freq, 'sp_psd':avg_psd1D})
-    table.to_csv(table_dir+dstr+'.csv',index=False) 
- 
     #  plot PSD vs. freq
-    low_bound = 2*pscale    #  ?????
+    low_bound = 1/(nacross*pscale)    #  set by aperture size
     up_bound = 1/(2*pscale) #  nyquist limit
     
-    fig = plt.figure(figsize=[10,7])
+    fig = plt.figure(figsize=[9,6])
     ax = fig.add_subplot(111)
 
     def func(x, a, b):
         return a+(b*x) 
     
-    par,pcov = optimize.curve_fit(func,np.log10(freq[(freq > low_bound) & (freq < up_bound)]),
-                                  np.log10(avg_psd1D[(freq > low_bound) & (freq < up_bound)]), p0=(1, -3.5))
+    par,pcov = optimize.curve_fit(func,np.log10(freq[(freq > 4*low_bound) & (freq < up_bound)]),
+                                np.log10(avg_psd1D[(freq > 4*low_bound) & (freq < up_bound)]), p0=(1, -3.5))
     slope = par[0]
     intercept = par[1]
     
     ## Plot original PSD and linear fit
-    img = ax.loglog((freq[(freq > low_bound) & (freq < up_bound)]),(avg_psd1D[(freq > low_bound) & (freq <up_bound)]),
-                    'bo',(freq[(freq > low_bound) & (freq < up_bound)]),
-                    10**(func(np.log10(freq[(freq > low_bound) & (freq < up_bound)]),*par)), 'r')
+    img = ax.loglog((freq),(avg_psd1D),'bo',(freq[(freq > 4*low_bound) & (freq < up_bound)]),
+                    10**(func(np.log10(freq[(freq > 4*low_bound) & (freq < up_bound)]),*par)), 'r',lw=2)
 
-    ax.legend(['PSD', 'slope = {0:.2f}, intercept={1:.2f}'.format(slope, intercept)],loc=3, fontsize=15)
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color='black', linestyle='-') 
-    ax.set_title(whenstr, fontsize=30, y=1.04)
-    ax.set_ylabel('Power Spectrum',fontsize=15)
-    ax.set_xlabel('Spatial Frequency',fontsize=15)
+    ax.legend(['_nolegend_', 'slope = {0:.2f}, intercept={1:.2f}'.format(slope, intercept)],loc=3, fontsize=15)
+    ax.tick_params(axis='both', which='both', labelsize=16,direction='in')
+    ax.grid(b=True, which='major', color='k', linestyle='-') 
+    ax.set_ylabel('Power Spectrum',fontsize=20)
+    ax.set_xlabel('Spatial Frequency',fontsize=20)
+    ax.set_title(whenstr, fontsize=20, y=1.04)
+   
+    # store plots and tables in date of observation directory (be more descriptive)
+    date_dir = os.path.join(save_path,whenstr)
+    
+    sp_psd_dir = os.path.join(date_dir,'sp_psd')
+    os.makedirs(sp_psd_dir)
+    
+    table_dir = os.path.join(sp_psd_dir,'tables')
+    os.makedirs(table_dir)
     
     plots_dir = os.path.join(sp_psd_dir,'plots')
-    plt.savefig(plots_dir+dstr+'.png')  ## make the date input/comment 
+    os.makedirs(plots_dir)
+    
+    table = pd.DataFrame({'freq':freq, 'sp_psd':avg_psd1D})
+    table.to_csv(table_dir+dstr+'.csv',index=False) 
+ 
+    plt.savefig(plots_dir+dstr+'.pdf')  ## make the date input/comment 
     print('done plotting')
     
     # Store measured slope in summary dataframe
     df.loc[n,'slope'] = slope
     n=n+1
 
-summary_path = os.path.join(save_dir,'sp_psd_summary')
-df.to_csv(summary_path+dstr+'.csv')
+summary_path = os.path.join(save_path,'sp_psd_summary')
+df.loc[:,('whenstr','slope')].to_csv(summary_path+dstr+'.csv')
     
