@@ -1,16 +1,9 @@
-def makeAperture(n,pscale):
-    x = np.linspace(-(n-1)/2,(n-1)/2,n)*pscale 
-    y = np.linspace(-(n-1)/2,(n-1)/2,n)*pscale
-    mg = np.meshgrid(x,y)
-    ar = np.sqrt(np.sum((m**2 for m in mg))) 
-    ap_outer = (ar <= outD/2)
-    ap_inner = (ar <= inDs/2)   
-    ap = (ap_outer ^ ap_inner).astype(int)
-    return ap
+import numpy as np
+import scipy.fftpack as fft
 
 def makeFreqGrid(n,pscale):
     kx = fft.fftshift(fft.fftfreq(n,pscale))
-    ky = fft.fftshift(fft.fftfreq(n,psacle))
+    ky = fft.fftshift(fft.fftfreq(n,pscale))
     mg = np.meshgrid(kx,ky)
     kr = np.sqrt(np.sum((m**2 for m in mg))) 
     return kr
@@ -41,7 +34,7 @@ def radialProfile(image, center=None):
     
     return mean,std,n 
 
-def PowerLawFit(psd,freq,low_bound = 0., up_bound = 2.7):
+'''def PowerLawFit(psd,freq,low_bound = 0., up_bound = 2.7):
     """Plot the 1D psd"""
     
     ##  create matplotlib figure
@@ -89,4 +82,4 @@ def PSDplot(psd, freq, low_bound = 0., up_bound = 2.7, display=False, **kwargs):
     if display: plt.show()
     if 'save_image' in kwargs: plt.savefig(kwargs['save_image'])    
     
-    return slope
+    return slope'''
