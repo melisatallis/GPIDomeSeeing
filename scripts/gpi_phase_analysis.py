@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.fftpack as fft
+import os
 
 def makeFreqGrid(n,pscale):
     kx = fft.fftshift(fft.fftfreq(n,pscale))
@@ -81,3 +82,12 @@ def PSDplot(psd, freq, low_bound = 0., up_bound = 2.7, display=False, **kwargs):
     if 'save_image' in kwargs: plt.savefig(kwargs['save_image'])    
     
     return slope'''
+
+def make_dir(directory_path):
+    
+    if os.path.isdir(directory_path):
+        print("directory at: ",directory_path, "already exists")
+        pass
+    else:
+        os.makedirs(directory_path)
+        print("Created directory at: ", directory_path)

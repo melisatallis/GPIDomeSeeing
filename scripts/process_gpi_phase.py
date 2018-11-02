@@ -35,7 +35,8 @@ kr = gpa.makeFreqGrid(n,pscale)
 
 #  Search directory tree for dm phase cubes
 #rootdir = "/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/Reduced/"
-rootdir = "/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/Reduced/"
+
+rootdir = "/home/sda/mtallis/PhaseScripts/aotelem/Reduced/"
 fname_list = list()
 name_list = list()
 
@@ -54,12 +55,13 @@ df['filename'] = name_list
 
 #  Results path
 #save_path = '/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/'
+
 save_path = '/home/sda/mtallis/Results/'
 dstr = time.strftime('%Y%m%d')
 
 #  begin psd analysis
 n=0
-for file in df.loc[:,'path']:
+for file in df.loc[0:2,'path']:
     
     hdulist = fits.open(file,memmap=True)        # phase data shape (time,xpix,ypix)
     df.loc[n,'whenstr'] = hdulist[0].header['whenstr']  
@@ -124,27 +126,31 @@ for file in df.loc[:,'path']:
     ax.set_title(whenstr, fontsize=20, y=1.04)
    
     # store plots and tables in date of observation directory (be more descriptive)
-    date_dir = os.path.join(save_path,whenstr)
+    date_dir = os.path.join(save_path,whenstr[0:8])
+    gpa.make_dir(date_dir)
     
     sp_psd_dir = os.path.join(date_dir,'sp_psd')
-    os.makedirs(sp_psd_dir)
-    
-    table_dir = os.path.join(sp_psd_dir,'tables')
-    os.makedirs(table_dir)
+    gpa.make_dir(sp_psd_dir)
     
     plots_dir = os.path.join(sp_psd_dir,'plots')
-    os.makedirs(plots_dir)
+    gpa.make_dir(plots_dir)
+    
+    tables_dir = os.path.join(sp_psd_dir,'tables')
+    gpa.make_dir(tables_dir)
+    
+    table_prefix = 'sp_psd_table_'
+    plots_prefix = 'sp_psd_plot_'
     
     table = pd.DataFrame({'freq':freq, 'sp_psd':avg_psd1D})
-    table.to_csv(table_dir+dstr+'.csv',index=False) 
+    table.to_csv(sp_psd_dir +'/tables/'+ table_prefix + whenstr +'_' + dstr + '.csv',index=False) 
  
-    plt.savefig(plots_dir+dstr+'.pdf')  ## make the date input/comment 
+    plt.savefig(sp_psd_dir +'/plots/'+ plots_prefix + whenstr + '_' + dstr + '.pdf')  ## make the date input/comment 
     print('done plotting')
     
     # Store measured slope in summary dataframe
     df.loc[n,'slope'] = slope
     n=n+1
 
-summary_path = os.path.join(save_path,'sp_psd_summary')
-df.loc[:,('whenstr','slope')].to_csv(summary_path+dstr+'.csv')
+summary_prefix = 'sp_psd_summary_'
+df.loc[:,('whenstr','slope')].to_csv(save_path + summary_prefix + dstr+'.csv')
     
