@@ -60,7 +60,7 @@ df['filename'] = name_list
 #  Results path
 #save_path = '/Users/MelisaT/Documents/Research/GPIDomeSeeing/data/'
 
-save_path = '/home/sda/mtallis/Results/'
+save_path = '/home/sda/Dropbox\ \(GPI\)/TEST_SCRATCH/scratch/mtallis/Results/'
 dstr = time.strftime('%Y%m%d')
 
 #  begin psd analysis
