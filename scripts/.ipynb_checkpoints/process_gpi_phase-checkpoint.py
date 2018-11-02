@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
+
 import pandas as pd
 import scipy.fftpack as fft
 from astropy.io import fits
