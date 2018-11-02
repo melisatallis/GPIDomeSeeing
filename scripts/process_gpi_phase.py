@@ -1,7 +1,10 @@
+import os
 import numpy as np
+import matplotlib as mpl
+if os.environ.get('DISPLAY','') == '':
+    print('no display found. Using non-interactive Agg backend')
+    mpl.use('Agg')
 import matplotlib.pyplot as plt
-plt.use('Agg')
-
 import pandas as pd
 import scipy.fftpack as fft
 from astropy.io import fits
@@ -9,7 +12,6 @@ from scipy import optimize
 import poppy
 import gpi_phase_analysis as gpa
 import sys
-import os
 import time
 
 #  Physical Parameters
