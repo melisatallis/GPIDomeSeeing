@@ -65,7 +65,7 @@ dstr = time.strftime('%Y%m%d')
 
 #  begin psd analysis
 n=0
-for file in df.loc[0:2,'path']:
+for file in df.loc[:,'path']:
     
     hdulist = fits.open(file,memmap=True)        # phase data shape (time,xpix,ypix)
     df.loc[n,'whenstr'] = hdulist[0].header['whenstr']  
