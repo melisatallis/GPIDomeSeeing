@@ -62,14 +62,30 @@ df['filename'] = name_list
 
 save_path = '/home/sda/mtallis/Results/'
 dstr = time.strftime('%Y%m%d')
+table_prefix = 'sp_psd_table_'
+plots_prefix = 'sp_psd_plot_'
+
+
 
 #  begin psd analysis
 n=0
 for file in df.loc[:,'path']:
     
+    
+    
     hdulist = fits.open(file,memmap=True)        # phase data shape (time,xpix,ypix)
+    
+    if 
     df.loc[n,'whenstr'] = hdulist[0].header['whenstr']  
     whenstr = df.loc[n,'whenstr']
+    
+    # check if file already exists
+    date_dir = os.path.join(save_path,whenstr[0:8])  
+    sp_psd_dir = os.path.join(date_dir,'sp_psd')
+    plots_dir = os.path.join(sp_psd_dir,'plots')
+    tables_dir = os.path.join(sp_psd_dir,'tables')
+    
+    if os.path.join(tables_dir,table_prefix,dstr)
     
     phase = hdulist[0].data.astype('float')
     timesteps, phx, phy = phase.shape            # contains a datacube
@@ -130,20 +146,10 @@ for file in df.loc[:,'path']:
     ax.set_title(whenstr, fontsize=20, y=1.04)
    
     # store plots and tables in date of observation directory (be more descriptive)
-    date_dir = os.path.join(save_path,whenstr[0:8])
     gpa.make_dir(date_dir)
-    
-    sp_psd_dir = os.path.join(date_dir,'sp_psd')
     gpa.make_dir(sp_psd_dir)
-    
-    plots_dir = os.path.join(sp_psd_dir,'plots')
     gpa.make_dir(plots_dir)
-    
-    tables_dir = os.path.join(sp_psd_dir,'tables')
     gpa.make_dir(tables_dir)
-    
-    table_prefix = 'sp_psd_table_'
-    plots_prefix = 'sp_psd_plot_'
     
     table = pd.DataFrame({'freq':freq, 'sp_psd':avg_psd1D})
     table.to_csv(sp_psd_dir +'/tables/'+ table_prefix + whenstr +'_' + dstr + '.csv',index=False) 
