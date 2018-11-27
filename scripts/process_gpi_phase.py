@@ -70,14 +70,16 @@ plots_prefix = 'sp_psd_plot_'
 #  begin psd analysis
 n=0
 for file in df.loc[:,'path']:
-    
-    
-    
+
     hdulist = fits.open(file,memmap=True)        # phase data shape (time,xpix,ypix)
-    
-    if 
-    df.loc[n,'whenstr'] = hdulist[0].header['whenstr']  
-    whenstr = df.loc[n,'whenstr']
+    try:
+        whenstr = hdulist[0].header['whenstr']
+    except:
+        print(n,'_whenstr not found in header for ',df.loc[n,'filename'])
+    else:
+        whenstr = (df.loc[n,'filename'].split('_')[2] + df.loc[n,'filename'].split('_')[3]).replace('.','')
+
+    df.loc[n,'whenstr'] = whenstr
     
     # check if file already exists
     date_dir = os.path.join(save_path,whenstr[0:8])  
